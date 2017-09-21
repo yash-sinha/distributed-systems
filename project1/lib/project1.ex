@@ -49,9 +49,15 @@ defmodule Project1 do
     end
 
     defp get_my_ip do
-    {:ok,lst} = :inet.getif()
-    x = elem(List.first(lst),0)
-    addr =  to_string(elem(x,0)) <> "." <>  to_string(elem(x,1)) <> "." <>  to_string(elem(x,2)) <> "." <>  to_string(elem(x,3))
-    addr
+	#ipadd = ""
+    {os, _name} = :os.type
+    {:ok, ifs} = :inet.getif()
+    ips = for {ip, _, _} <- ifs, do: to_string(:inet.ntoa(ip))
+    ipadd = if Atom.to_string(os) == ":unix" do
+    hd(ips)
+	else
+    List.last(ips)
+	end
+	ipadd
  end
 end
