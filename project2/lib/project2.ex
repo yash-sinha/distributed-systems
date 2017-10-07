@@ -91,14 +91,44 @@ defmodule Project2 do
 
   def getk_from_all(counter_map, processpid, time_start, numnodes) do
      receive do
-       {:check_convergence,client} ->
-         counter_map = Map.put(counter_map,client,1)
+       {:checknodeup,neighs, nodename, name, rumor, algo, topology, flag, numnodes, s_value, w_value} ->
+        #  IO.puts "Checking convergence. My val: " <> "#{s_value/w_value}" 
+         res_haskey = Map.has_key?(counter_map, nodename)
+         res_converged = true
+         if res_haskey == true do
+           res_val = Map.get(counter_map, name)
+           if res_val == 0 do
+             res_converged = false
+           end
+         end
+         res = res_haskey && res_converged
+        #  IO.puts "From: " <> "#{name}" <> " checking convergence of :" <> "#{nodename}" <> " res: " <> "#{res}"
+         reqnode = "act" <> "#{name}"
+         client = String.to_atom(reqnode)
+        #  IO.inspect( client)
+         :global.whereis_name(client) |> send({:sendtonext, [res, neighs, nodename, name, rumor, algo, topology, flag, numnodes, s_value, w_value]})
+       {:check_convergence,nodename, s_value, w_value} ->
+         clients = Enum.map_reduce(counter_map, 0, fn({k,v}, acc) -> {v, v + acc} end)
+         numdone = elem(clients, 1)
+        #  IO.puts "Checking convergence: " <> "#{nodename}"
+         res_haskey = Map.has_key?(counter_map, nodename)
+         res_val = 0
+         if res_haskey == true do
+           res_val = Map.get(counter_map, nodename)
+         end
+        if res_val == 0 do
+         IO.puts "Pushsum value for: " <> "#{nodename}" <> ": " <> "#{s_value/w_value}"
+         counter_map = Map.put(counter_map,nodename,1)
          #counter_map = %{counter_map|client=>1}
+        #  IO.inspect(counter_map)
          clients = Enum.map_reduce(counter_map, 0, fn({k,v}, acc) -> {v, v + acc} end)
          numdone = elem(clients, 1)
         #  IO.puts "numdone: " <> "#{numdone}" <> " numnodes: " <> "#{numnodes}"
          percent = Float.round(numdone*100/numnodes, 0)
-         IO.puts "Percent completed: " <> "#{percent}" <> "%"
+         IO.puts "Percent completed: " <> "#{percent}" <> "%" <> " Time elapsed: " <> "#{Time.diff(Time.utc_now(),time_start,:millisecond)}" <> " milliseconds"
+        end
+
+        #  IO.inspect(counter_map)
          if numdone == numnodes do
            time_end = Time.utc_now()
            IO.puts "Convergence took " <> "#{Time.diff(time_end,time_start,:millisecond)}" <> " milliseconds"

@@ -50,6 +50,28 @@ defmodule WORKER do
                 msg = {s_value, w_value}
                 ratio_list = ratio_list ++ [ratio]
                 sendrumour(name, msg, algo, topology, flag, numnodes, s_value, w_value)
+              {:sendtonext, [isconverged, neighs, node, name, rumor, algo, topology, flag, numnodes, s_value, w_value]} ->
+                # IO.puts "In sendtonext of: " <> "#{name}" <> " queried node " <> "#{node}" <> " res is: " <> "#{isconverged}"
+                if isconverged == true do
+                  # IO.puts "Client converged, choosing next"
+                  neighs = neighs -- [node]
+                  if length(neighs) == 0 do
+                    # IO.puts "SendToOne: Pushsum value for: " <> "#{name}" <> ": " <> "#{s_value/w_value}"
+                    #:global.whereis_name(:server) |> send({:check_convergence,name, s_value, w_value})
+                    nodename = "act" <> "#{me}"
+                    client = String.to_atom(nodename)
+                    :global.whereis_name(client) |> send({:sendmessage, [name, rumor, algo, topology]})
+                  else
+                    node = Enum.random(neighs)
+                    # nodename = "act" <> "#{node}"
+                    sendtoneighbours(neighs, node, name, rumor, algo, topology, flag, numnodes, s_value, w_value)
+                  end
+                else
+                  # IO.puts "Client not converged"
+                  nodename = "act" <> "#{node}"
+                  client = String.to_atom(nodename)
+                  :global.whereis_name(client) |> send({:sendmessage, [name, rumor, algo, topology]})
+                end
 
         end
         cond do
@@ -61,8 +83,8 @@ defmodule WORKER do
                         abs((Enum.at(ratio_list, 2) - Enum.at(ratio_list, 1))) <= threshold &&
                         abs((Enum.at(ratio_list, 3) - Enum.at(ratio_list, 2))) <= threshold do
                         flag = 1
-                        IO.puts "Pushsum value for: " <> "#{me}" <> ": " <> "#{s_value/w_value}"
-                        :global.whereis_name(:server) |> send({:check_convergence,me})
+                        # IO.puts "Pushsum value for: " <> "#{me}" <> ": " <> "#{s_value/w_value}"
+                        :global.whereis_name(:server) |> send({:check_convergence,me,  s_value, w_value})
                         # Process.exit(self, :normal)
                     end
                 else
@@ -270,11 +292,19 @@ defmodule WORKER do
       # end
 
       # IO.puts "Nodename: " <> "#{nodename}"
-      nodename = "act" <> "#{nodename}"
-      client = String.to_atom(nodename)
-      # IO.inspect client
-      if :global.whereis_name(client) != :undefined && :global.whereis_name(client) |> Process.alive? == true do
-        :global.whereis_name(client) |> send({:sendmessage, [name, rumor, algo, topology]})
+
+
+      #working
+      # nodename = "act" <> "#{nodename}"
+      # client = String.to_atom(nodename)
+      # if :global.whereis_name(client) != :undefined && :global.whereis_name(client) |> Process.alive? == true do
+      #   :global.whereis_name(client) |> send({:sendmessage, [name, rumor, algo, topology]})
+      # end
+
+
+      :global.whereis_name(:server) |> send({:checknodeup,neighs, nodename, name, rumor, algo, topology, flag, numnodes, s_value, w_value})
+
+
         # IO.puts "I: " <>"#{name}" <> " is sending to: " <> "#{nodename}"
       # else
       #   neighs = neighs -- [nodename]
@@ -287,7 +317,7 @@ defmodule WORKER do
       #     sendtoneighbours(neighs, node, name, rumor, algo, topology, flag, numnodes, s_value, w_value)
       #   end
 
-      end
+
 
     end
 end
