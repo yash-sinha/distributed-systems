@@ -1,0 +1,208 @@
+Numnodes is: 100
+Server pid
+#PID<0.76.0>
+Workers created
+Pushsum value for node 99 : 99.0
+Pushsum value for node 32 : 32.0
+Pushsum value for node 89 : 89.0
+Pushsum value for node 16 : 16.0
+Pushsum value for node 97 : 97.0
+Pushsum value for node 49 : 49.0
+Pushsum value for node 90 : 90.0
+Pushsum value for node 45 : 45.0
+Pushsum value for node 39 : 39.0
+Pushsum value for node 94 : 94.0
+Pushsum value for node 42 : 42.0
+Pushsum value for node 43 : 43.0
+Pushsum value for node 31 : 31.0
+Pushsum value for node 91 : 91.0
+Pushsum value for node 26 : 26.0
+Pushsum value for node 37 : 37.0
+Pushsum value for node 86 : 86.0
+Pushsum value for node 38 : 38.0
+Pushsum value for node 84 : 84.0
+Pushsum value for node 22 : 22.0
+Pushsum value for node 33 : 33.0
+Pushsum value for node 81 : 81.0
+Pushsum value for node 80 : 80.0
+Pushsum value for node 76 : 76.0
+Pushsum value for node 69 : 69.0
+Pushsum value for node 77 : 77.0
+Pushsum value for node 55 : 55.0
+Pushsum value for node 88 : 88.0
+Pushsum value for node 46 : 46.0
+Pushsum value for node 30 : 30.0
+Pushsum value for node 47 : 47.0
+Pushsum value for node 44 : 44.0
+Pushsum value for node 15 : 15.0
+Pushsum value for node 28 : 28.0
+Pushsum value for node 41 : 41.0
+Pushsum value for node 34 : 34.0
+Pushsum value for node 40 : 40.0
+Pushsum value for node 25 : 25.0
+Pushsum value for node 48 : 48.0
+Pushsum value for node 36 : 36.0
+Pushsum value for node 23 : 23.0
+Pushsum value for node 82 : 82.0
+Pushsum value for node 79 : 79.0
+Pushsum value for node 14 : 14.0
+Pushsum value for node 73 : 73.0
+Pushsum value for node 12 : 12.0
+Pushsum value for node 75 : 75.0
+Pushsum value for node 70 : 70.0
+Pushsum value for node 72 : 72.0
+Pushsum value for node 35 : 35.0
+Pushsum value for node 65 : 65.0
+Pushsum value for node 68 : 68.0
+Pushsum value for node 61 : 61.0
+Pushsum value for node 58 : 58.0
+Pushsum value for node 66 : 66.0
+Pushsum value for node 54 : 54.0
+Pushsum value for node 9 : 9.0
+Pushsum value for node 63 : 63.0
+Pushsum value for node 96 : 96.0
+Pushsum value for node 8 : 8.0
+Pushsum value for node 59 : 59.0
+Pushsum value for node 50 : 50.0
+Pushsum value for node 5 : 5.0
+Pushsum value for node 93 : 93.0
+Pushsum value for node 56 : 56.0
+Pushsum value for node 3 : 3.0
+Pushsum value for node 74 : 74.0
+Pushsum value for node 52 : 52.0
+Pushsum value for node 85 : 85.0
+Pushsum value for node 100 : 100.0
+Pushsum value for node 60 : 60.0
+Pushsum value for node 67 : 67.0
+Pushsum value for node 98 : 98.0
+Pushsum value for node 53 : 53.0
+Pushsum value for node 95 : 95.0
+Pushsum value for node 20 : 20.0
+Pushsum value for node 19 : 19.0
+Pushsum value for node 92 : 92.0
+Pushsum value for node 18 : 18.0
+Pushsum value for node 17 : 17.0
+Pushsum value for node 87 : 87.0
+Pushsum value for node 83 : 83.0
+Pushsum value for node 78 : 78.0
+Pushsum value for node 71 : 71.0
+Pushsum value for node 57 : 57.0
+Pushsum value for node 51 : 51.0
+Pushsum value for node 64 : 64.0
+Pushsum value for node 62 : 62.0
+Pushsum value for node 29 : 29.0
+Pushsum value for node 27 : 27.0
+Pushsum value for node 24 : 24.0
+Pushsum value for node 21 : 21.0
+Pushsum value for node 13 : 13.0
+Pushsum value for node 11 : 11.0
+Pushsum value for node 10 : 10.0
+Pushsum value for node 7 : 7.0
+Pushsum value for node 6 : 6.0
+Pushsum value for node 2 : 2.0
+Pushsum value for node 4 : 4.0
+Pushsum value for node 1 : 1.0
+Started at: 18:27:36.228828
+Percent completed: 1.0%
+Percent completed: 2.0%
+Percent completed: 3.0%
+Percent completed: 4.0%
+Percent completed: 5.0%
+Percent completed: 6.0%
+Percent completed: 7.0%
+Percent completed: 8.0%
+Percent completed: 9.0%
+Percent completed: 10.0%
+Percent completed: 11.0%
+Percent completed: 12.0%
+Percent completed: 13.0%
+Percent completed: 14.0%
+Percent completed: 15.0%
+Percent completed: 16.0%
+Percent completed: 17.0%
+Percent completed: 18.0%
+Percent completed: 19.0%
+Percent completed: 20.0%
+Percent completed: 21.0%
+Percent completed: 22.0%
+Percent completed: 23.0%
+Percent completed: 24.0%
+Percent completed: 25.0%
+Percent completed: 26.0%
+Percent completed: 27.0%
+Percent completed: 28.0%
+Percent completed: 29.0%
+Percent completed: 30.0%
+Percent completed: 31.0%
+Percent completed: 32.0%
+Percent completed: 33.0%
+Percent completed: 34.0%
+Percent completed: 35.0%
+Percent completed: 36.0%
+Percent completed: 37.0%
+Percent completed: 38.0%
+Percent completed: 39.0%
+Percent completed: 40.0%
+Percent completed: 41.0%
+Percent completed: 42.0%
+Percent completed: 43.0%
+Percent completed: 44.0%
+Percent completed: 45.0%
+Percent completed: 46.0%
+Percent completed: 47.0%
+Percent completed: 48.0%
+Percent completed: 49.0%
+Percent completed: 50.0%
+Percent completed: 51.0%
+Percent completed: 52.0%
+Percent completed: 53.0%
+Percent completed: 54.0%
+Percent completed: 55.0%
+Percent completed: 56.0%
+Percent completed: 57.0%
+Percent completed: 58.0%
+Percent completed: 59.0%
+Percent completed: 60.0%
+Percent completed: 61.0%
+Percent completed: 62.0%
+Percent completed: 63.0%
+Percent completed: 64.0%
+Percent completed: 65.0%
+Percent completed: 66.0%
+Percent completed: 67.0%
+Percent completed: 68.0%
+Percent completed: 69.0%
+Percent completed: 70.0%
+Percent completed: 71.0%
+Percent completed: 72.0%
+Percent completed: 73.0%
+Percent completed: 74.0%
+Percent completed: 75.0%
+Percent completed: 76.0%
+Percent completed: 77.0%
+Percent completed: 78.0%
+Percent completed: 79.0%
+Percent completed: 80.0%
+Percent completed: 81.0%
+Percent completed: 82.0%
+Percent completed: 83.0%
+Percent completed: 84.0%
+Percent completed: 85.0%
+Percent completed: 86.0%
+Percent completed: 87.0%
+Percent completed: 88.0%
+Percent completed: 89.0%
+Percent completed: 90.0%
+Percent completed: 91.0%
+Percent completed: 92.0%
+Percent completed: 93.0%
+Percent completed: 94.0%
+Percent completed: 95.0%
+Percent completed: 96.0%
+Percent completed: 97.0%
+Percent completed: 98.0%
+Percent completed: 99.0%
+Percent completed: 100.0%
+Convergence took 4080 milliseconds
+Killing server and actors
+Terminated all actors
