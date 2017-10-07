@@ -1,15 +1,14 @@
-defmodule PROJECT1.Mixfile do
+defmodule Project2.Mixfile do
   use Mix.Project
 
   def project do
     [
-      app: :project1,
+      app: :project2,
       version: "0.1.0",
       elixir: "~> 1.5",
-      build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
       deps: deps(),
-      escript: escript()
+      escript: [main_module: Project2]
     ]
   end
 
@@ -18,10 +17,6 @@ defmodule PROJECT1.Mixfile do
     [
       extra_applications: [:logger]
     ]
-  end
-
-  def escript do
-    [main_module: Project1]
   end
 
   # Run "mix help deps" to learn about dependencies.
