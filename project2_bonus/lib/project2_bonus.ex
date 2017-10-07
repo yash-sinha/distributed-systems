@@ -11,7 +11,7 @@ defmodule Project2Bonus do
       ctr = 0
       rumor = {}
 
-      #Taking 
+      #Taking
       if(topology == "2D" || topology == "imp2D")
       do
         i= :math.pow(numnodes,1/2)
@@ -34,30 +34,14 @@ defmodule Project2Bonus do
 
     #Start time
     IO.puts "Started at: " <> "#{time_start}"
-
-    # if algo == "push-sum" do
-    # :global.whereis_name(:act1) |> send({:sendmessage, [2, {1, 0.5}, algo, topology]})
-    # else
     if algo == "gossip" do
       :global.whereis_name(:act1) |> send({:sendmessage, [2, {"Spread", "rumor"}, algo, topology]})
     else
       :global.whereis_name(:act1) |> send({:pushsuminit})
     end
-    # IO.puts "Sent gossip"
-    # sleepnow("start", numnodes, serverpid)
+
     Process.sleep(:infinity)
   end
-
-  # def sleepnow(val, numnodes, serverpid) do
-  #   res = ""
-  #   if val == "start" do
-  #     Process.sleep(:infinity)
-  #   else
-  #     killall(numnodes)
-  #     Process.exit(serverpid, :kill)
-  #   end
-  #   res
-  # end
 
   def create_workers(n, ctr, rumor, algo, topology, counter_map, numnodes) when n < 1 do
     IO.puts "Workers created"
@@ -71,33 +55,16 @@ defmodule Project2Bonus do
     end
     name = "act" <> "#{n}"
     worker = String.to_atom(name)
-    #IO.inspect(worker)
-    #IO.inspect(pid)
-    # IO.puts(n)
     :global.register_name(worker, pid)
-    # counter_map = Map.put(counter_map,n,0)
     create_workers(n-1, ctr, rumor, algo, topology, counter_map, numnodes)
-  end
-
-  def killall(n) do
-    if n < 1 do
-      IO.puts "Terminated all actors"
-    else
-      name = "act" <> "#{n}"
-      worker = String.to_atom(name)
-      :global.whereis_name(worker) |> send({:exit, :normal})
-     killall(n-1)
-   end
   end
 
   def getk_from_all(counter_map, processpid, time_start, numnodes,failureNodes,deleted) do
      receive do
        {:check_convergence,client} ->
          counter_map = Map.put(counter_map,client,1)
-         #counter_map = %{counter_map|client=>1}
          clients = Enum.map_reduce(counter_map, 0, fn({k,v}, acc) -> {v, v + acc} end)
          numdone = elem(clients, 1)
-        #  IO.puts "numdone: " <> "#{numdone}" <> " numnodes: " <> "#{numnodes}"
         if numnodes - failureNodes <= 0 do
           IO.puts "All available nodes were killed!"
           percent = 100
@@ -114,12 +81,9 @@ defmodule Project2Bonus do
            time_end = Time.utc_now()
            IO.puts "Convergence took " <> "#{Time.diff(time_end,time_start,:millisecond)}" <> " milliseconds"
            IO.puts "Killing server and actors"
-          #  sleepnow("kill", numnodes, processpid)
-          #  killall(numnodes)
            Process.exit(processpid, :kill)
          end
 
-         #Adding failure cases
        after
          2 ->
            if(deleted == 0) do
@@ -133,7 +97,6 @@ defmodule Project2Bonus do
 
 
 def analyseFailureNodes(failureNodes,numNodes) do
-#failure nodes give the number of nodes user entered to fail
 if(failureNodes < 1 || length(numNodes) == 0) do
   IO.puts "Showing results after failure node deletion..."
 else
