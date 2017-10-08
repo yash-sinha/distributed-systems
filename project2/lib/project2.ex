@@ -8,56 +8,48 @@ defmodule Project2 do
       algo = Enum.at(input,2)
       ctr = 0
       rumor = {}
-      #setting default time limt
-      #timeLimit = 300 * numNodes
 
+      #Taking nearest square value according to total number of input nodes
       if(topology == "2D" || topology == "imp2D")
       do
         i= :math.pow(numnodes,1/2)
         i=Float.floor(i,0)
         numnodes = round(i * i)
       end
-    IO.puts "Numnodes is: " <>  "#{numnodes}"
+
     processpid = self
     counter_map = %{}
 
-
-
+    # spawn all the workers based on number of nodes
     create_workers(numnodes, ctr, rumor, algo, topology, counter_map, numnodes)
-    #TODO  topology is one of full, 2D, line, imp2D, algorithm is one of gossip, push-sum
-    time_start = Time.utc_now() #TODO
-    serverpid = spawn(Project2, :getk_from_all, [counter_map, processpid, time_start, numnodes])
+
+    #start time
+    time_start = Time.utc_now()
+
+    #spawn server process which will get the status of converged nodes
+    serverpid = spawn(Project2, :getk_from_all, [counter_map, processpid, time_start, numnodes, algo])
     :global.register_name(:server, serverpid)
-    IO.puts "Server pid"
-    IO.inspect(serverpid)
 
     #Start time
     IO.puts "Started at: " <> "#{time_start}"
 
-    # if algo == "push-sum" do
-    # :global.whereis_name(:act1) |> send({:sendmessage, [2, {1, 0.5}, algo, topology]})
-    # else
+    #Start the rumour in one of the nodes to trigger the gossip spreading process / start from mid in push-sum to get the added advantage in line topology
     if algo == "gossip" do
       :global.whereis_name(:act1) |> send({:sendmessage, [2, {"Spread", "rumor"}, algo, topology]})
     else
-      :global.whereis_name(:act1) |> send({:pushsuminit})
+      mid = round(numnodes/2)
+      start = "act" <> "#{mid}"
+      client = String.to_atom(start)
+      :global.whereis_name(client) |> send({:pushsuminit})
     end
-    # IO.puts "Sent gossip"
-    # sleepnow("start", numnodes, serverpid)
+
+    #To keep the main process running
     Process.sleep(:infinity)
   end
 
-  # def sleepnow(val, numnodes, serverpid) do
-  #   res = ""
-  #   if val == "start" do
-  #     Process.sleep(:infinity)
-  #   else
-  #     killall(numnodes)
-  #     Process.exit(serverpid, :kill)
-  #   end
-  #   res
-  # end
 
+  #Recursive function to spawn all the workers as per given number of nodes
+  #We are using rumour as the tuple of s value and w value in case of push sum and combination of strings in case of gossip
   def create_workers(n, ctr, rumor, algo, topology, counter_map, numnodes) when n < 1 do
     IO.puts "Workers created"
   end
@@ -70,29 +62,15 @@ defmodule Project2 do
     end
     name = "act" <> "#{n}"
     worker = String.to_atom(name)
-    #IO.inspect(worker)
-    #IO.inspect(pid)
-    # IO.puts(n)
     :global.register_name(worker, pid)
-    # counter_map = Map.put(counter_map,n,0)
     create_workers(n-1, ctr, rumor, algo, topology, counter_map, numnodes)
   end
 
-  def killall(n) do
-    if n < 1 do
-      IO.puts "Terminated all actors"
-    else
-      name = "act" <> "#{n}"
-      worker = String.to_atom(name)
-      :global.whereis_name(worker) |> send({:exit, :normal})
-     killall(n-1)
-   end
-  end
-
-  def getk_from_all(counter_map, processpid, time_start, numnodes) do
+ #Nodes will update the status of convergence in the counter_map to track the percentage of convergence
+  def getk_from_all(counter_map, processpid, time_start, numnodes, algo) do
      receive do
        {:checknodeup,neighs, nodename, name, rumor, algo, topology, flag, numnodes, s_value, w_value} ->
-        #  IO.puts "Checking convergence. My val: " <> "#{s_value/w_value}" 
+        #  IO.puts "Checking convergence. My val: " <> "#{s_value/w_value}"
          res_haskey = Map.has_key?(counter_map, nodename)
          res_converged = true
          if res_haskey == true do
@@ -102,43 +80,45 @@ defmodule Project2 do
            end
          end
          res = res_haskey && res_converged
-        #  IO.puts "From: " <> "#{name}" <> " checking convergence of :" <> "#{nodename}" <> " res: " <> "#{res}"
+
          reqnode = "act" <> "#{name}"
          client = String.to_atom(reqnode)
-        #  IO.inspect( client)
          :global.whereis_name(client) |> send({:sendtonext, [res, neighs, nodename, name, rumor, algo, topology, flag, numnodes, s_value, w_value]})
        {:check_convergence,nodename, s_value, w_value} ->
-         clients = Enum.map_reduce(counter_map, 0, fn({k,v}, acc) -> {v, v + acc} end)
-         numdone = elem(clients, 1)
-        #  IO.puts "Checking convergence: " <> "#{nodename}"
-         res_haskey = Map.has_key?(counter_map, nodename)
-         res_val = 0
-         if res_haskey == true do
-           res_val = Map.get(counter_map, nodename)
+         if algo == "gossip" do
+           counter_map = Map.put(counter_map,nodename,1)
+           clients = Enum.map_reduce(counter_map, 0, fn({k,v}, acc) -> {v, v + acc} end)
+           numdone = elem(clients, 1)
+           percent = Float.round(numdone*100/numnodes, 0)
+           IO.puts "Percent completed: " <> "#{percent}" <> "%" <> " Time elapsed: " <> "#{Time.diff(Time.utc_now(),time_start,:millisecond)}" <> " milliseconds"
+         else
+           clients = Enum.map_reduce(counter_map, 0, fn({k,v}, acc) -> {v, v + acc} end)
+           numdone = elem(clients, 1)
+           res_haskey = Map.has_key?(counter_map, nodename)
+           res_val = 0
+           if res_haskey == true do
+             res_val = Map.get(counter_map, nodename)
+           end
+          if res_val == 0 do
+           IO.puts "Pushsum value for: " <> "#{nodename}" <> ": " <> "#{s_value/w_value}"
+           counter_map = Map.put(counter_map,nodename,1)
+           clients = Enum.map_reduce(counter_map, 0, fn({k,v}, acc) -> {v, v + acc} end)
+           numdone = elem(clients, 1)
+           percent = Float.round(numdone*100/numnodes, 0)
+           IO.puts "Percent completed: " <> "#{percent}" <> "%" <> " Time elapsed: " <> "#{Time.diff(Time.utc_now(),time_start,:millisecond)}" <> " milliseconds"
+          end
          end
-        if res_val == 0 do
-         IO.puts "Pushsum value for: " <> "#{nodename}" <> ": " <> "#{s_value/w_value}"
-         counter_map = Map.put(counter_map,nodename,1)
-         #counter_map = %{counter_map|client=>1}
-        #  IO.inspect(counter_map)
-         clients = Enum.map_reduce(counter_map, 0, fn({k,v}, acc) -> {v, v + acc} end)
-         numdone = elem(clients, 1)
-        #  IO.puts "numdone: " <> "#{numdone}" <> " numnodes: " <> "#{numnodes}"
-         percent = Float.round(numdone*100/numnodes, 0)
-         IO.puts "Percent completed: " <> "#{percent}" <> "%" <> " Time elapsed: " <> "#{Time.diff(Time.utc_now(),time_start,:millisecond)}" <> " milliseconds"
-        end
 
-        #  IO.inspect(counter_map)
          if numdone == numnodes do
            time_end = Time.utc_now()
            IO.puts "Convergence took " <> "#{Time.diff(time_end,time_start,:millisecond)}" <> " milliseconds"
            IO.puts "Killing server and actors"
-          #  sleepnow("kill", numnodes, processpid)
-          #  killall(numnodes)
            Process.exit(processpid, :kill)
          end
+       after 1000 ->
+         IO.puts "Time elapsed.. " <> "#{Time.diff(Time.utc_now(),time_start,:millisecond)}" <> " milliseconds"
      end
-     getk_from_all(counter_map, processpid, time_start, numnodes)
+     getk_from_all(counter_map, processpid, time_start, numnodes, algo)
    end
 
 end
