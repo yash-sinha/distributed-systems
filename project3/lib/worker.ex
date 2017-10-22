@@ -4,7 +4,10 @@ defmodule WORKER do
         {:firstjoin, [firstgroup, sender]} ->
           IO.puts "firstjoin"
           firstgroup = firstgroup -- [id]
-          table = addbuffer(firstgroup, length(firstgroup) - 1, id, largerleaf, lessleaf, log4, table)
+          reslist = addbuffer(firstgroup, length(firstgroup) - 1, id, largerleaf, lessleaf, log4, table)
+          table = Enum.at(reslist, 0)
+          lessleaf = Enum.at(reslist, 1)
+          largerleaf = Enum.at(reslist, 2)
           IO.puts "Done add buffer"
           table = firstjointable(table, id, log4, log4 - 1)
 
@@ -13,10 +16,11 @@ defmodule WORKER do
           # messageworkernoargs(sender, "joinfinish")
 
         {:route, [msg, fromid, toid, hops]} ->
-          IO.puts "route"
+          IO.puts "hops: " <> "#{hops}"
           cond do
               msg == "join" ->
                     samePre = sameprefix(toBase4String(id, log4), toBase4String(toid, log4))
+
                     if(hops == -1 && samePre >0) do
                         j = Enum.to_list(0..(samePre - 1))
                         Enum.each(j, fn(s) ->  messageworker(toid, "addrow", [s, Enum.at(table, s)])  end)
@@ -81,7 +85,7 @@ defmodule WORKER do
                       cond do
                          ((length(lessleaf) > 0 && toid >= Enum.min(lessleaf) && toid < id) ||
                             (length(largerleaf) > 0 && toid <= Enum.max(largerleaf) && toid > id)) ->
-
+                            IO.puts "cond1"
                             diff = idspace + 10
                             nearest = -1
 
@@ -99,27 +103,34 @@ defmodule WORKER do
                             if (abs(toid - id) > diff) do
                               messageworker(nearest, "route", [msg, fromid, toid, hops + 1])
                             else
+                              IO.puts "cond1a"
                               :global.whereis_name(:server) |> send({String.to_atom("routefinish"), [fromid, toid, hops + 1]})
                             end
 
 
                           (length(lessleaf) < 4 && length(lessleaf) > 0 && toid < Enum.min(lessleaf)) ->
+                            IO.puts "cond2"
                              messageworker(Enum.min(lessleaf), "route", [msg, fromid, toid, hops + 1])
 
                           (length(largerleaf) < 4 && length(largerleaf) > 0 && toid > Enum.max(largerleaf)) ->
+                            IO.puts "cond3"
                              messageworker(Enum.max(largerleaf), "route", [msg, fromid, toid, hops + 1])
 
                           ((length(lessleaf) == 0 && toid < id) || (length(largerleaf) == 0 && toid > id)) ->
+                            IO.puts "cond4"
                              :global.whereis_name(:server) |> send({String.to_atom("routefinish"), [fromid, toid, hops + 1]})
 
                           getfromtable(table, samePre, String.to_integer(String.at(toBase4String(id, log4), samePre))) != -1 ->
+                            IO.puts "cond5"
                              messageworker(getfromtable(table, samePre, String.to_integer(String.at(toBase4String(id, log4), samePre))), "route", [msg, fromid, toid, hops + 1])
 
                           (toid > id) ->
+                            IO.puts "cond6"
                              messageworker(Enum.max(largerleaf), "route", [msg, fromid, toid, hops + 1])
                              :global.whereis_name(:server) |> send({String.to_atom("routenotinboth")})
 
                           (toid < id) ->
+                            IO.puts "cond7"
                             messageworker(Enum.min(lessleaf), "route", [msg, fromid, toid, hops + 1])
                             :global.whereis_name(:server) |> send({String.to_atom("routenotinboth")})
 
@@ -132,7 +143,10 @@ defmodule WORKER do
           table = addrow(table, rownum, newrow, 3)
 
         {:addleaf, [allleaf]} ->
-          table = addbuffer(allleaf, length(allleaf) - 1, id, largerleaf, lessleaf, log4, table)
+          reslist = addbuffer(allleaf, length(allleaf) - 1, id, largerleaf, lessleaf, log4, table)
+          table = Enum.at(reslist, 0)
+          lessleaf = Enum.at(reslist, 1)
+          largerleaf = Enum.at(reslist, 2)
           printinfo(lessleaf, largerleaf, log4 - 1, table)
           numofback = getnumofback(lessleaf, length(lessleaf) - 1, numofback, id)
           numofback = getnumofback(largerleaf, length(largerleaf) - 1 , numofback, id)
@@ -140,7 +154,10 @@ defmodule WORKER do
           table = multiupdatetable(log4 - 1, id, log4, table)
 
           {:updateme, [newnode]} ->
-            addone(newnode, id, largerleaf, lessleaf, log4, table)
+            reslist = addone(newnode, id, largerleaf, lessleaf, log4, table)
+            table = Enum.at(reslist, 0)
+            lessleaf = Enum.at(reslist, 1)
+            largerleaf = Enum.at(reslist, 2)
             messageworkernoargs(newnode, "ack")
 
           {:ack} ->
@@ -158,8 +175,8 @@ defmodule WORKER do
 
           {:clocktick} ->
             # IO.puts "Clocktick"
-            IO.puts "ID: " <> "#{id}"
-            self() |> send({:route, ["route", id, :random.uniform(idspace), -1]})
+            # IO.puts "ID: " <> "#{id}"
+            self() |> send({:route, ["route", id, :random.uniform(idspace - 1), -1]})
             :timer.sleep(1000)
             self() |> send({:clocktick})
             #TODO where does this stop?
@@ -205,32 +222,45 @@ defmodule WORKER do
     def addbuffer(all, lenall, id, largerleaf, lessleaf, log4, table) do
       if lenall < 0 do
         IO.puts "add buffer done"
-        table
+        reslist = [table, lessleaf, largerleaf]
+        reslist
       else
         s = Enum.at(all, lenall)
         if s > id && !Enum.member?(largerleaf,s) do
            if(length(largerleaf) < 4) do
               largerleaf = largerleaf ++ [s]
+              IO.puts "largerleaf1 -- s: " <> "#{s}" <> " id: " <> "#{id}"
+              IO.inspect(largerleaf)
            else
               if(s < Enum.max(largerleaf)) do
                largerleaf = largerleaf -- [Enum.max(largerleaf)]
                largerleaf = largerleaf ++ [s]
+               IO.puts "largerleaf2 -- s: " <> "#{s}" <> " id: " <> "#{id}"
+               IO.inspect(largerleaf)
               end
            end
         else
           if s < id && !Enum.member?(lessleaf,s) do
              if(length(lessleaf) < 4) do
                lessleaf = lessleaf ++ [s]
+               IO.puts "lessleaf1 -- s: " <> "#{s}" <> " id: " <> "#{id}"
+               IO.inspect(lessleaf)
              else
                if(s > Enum.min(lessleaf)) do
                  lessleaf = lessleaf -- [Enum.min(lessleaf)]
                  lessleaf = lessleaf ++ [s]
+                 IO.puts "lessleaf2 -- s: " <> "#{s}" <> " id: " <> "#{id}"
+                 IO.inspect(lessleaf)
                end
              end
           end
         end
        #  IO.puts "alive"
         samePre = sameprefix(toBase4String(id, log4), toBase4String(s, log4))
+      IO.puts "lessleaf"
+      IO.inspect(lessleaf)
+      IO.puts "largerleaf"
+      IO.inspect(largerleaf)
        #  IO.puts "alive1"
        IO.puts "id: " <> "#{id}" <>" log4: " <> "#{log4}" <> " tobase: " <> toBase4String(id, log4) <>" samepre: " <> "#{samePre}" <> " tobase id log4: " <> toBase4String(id, log4) <> " tobase s log 4: " <> toBase4String(s, log4)
        IO.puts " String at: " <> String.at(toBase4String(id, log4), samePre)
@@ -273,6 +303,8 @@ defmodule WORKER do
      if(getfromtable(table, samePre, String.to_integer(String.at(toBase4String(id, log4), samePre))) == -1) do
        table = updatetable(table, samePre, String.to_integer(String.at(toBase4String(id, log4), samePre)), one)
      end
+     reslist = [table, lessleaf, largerleaf]
+     reslist
    end
 
     def toBase4String(raw, len) do
@@ -280,7 +312,7 @@ defmodule WORKER do
       diff = len - String.length(str)
       IO.puts "raw: " <> "#{raw}" <> " str raw: " <> str <> " diff: " <> "#{diff}" <> " len: " <> "#{len}"
       if diff > 0 do
-        str = createstr(str, 0, diff)
+        str = createstr(str, 1, diff)
       end
       # IO.puts "createstr: " <> str
       str
@@ -323,6 +355,7 @@ defmodule WORKER do
     end
 
     def messageworker(id, func, args) do
+      IO.puts "message worker: " <> "#{id}" <> " func: " <> "#{func}"
       name = "act" <> "#{id}"
       worker = String.to_atom(name)
       funcatom = String.to_atom(func)
@@ -345,15 +378,7 @@ defmodule WORKER do
     end
 
     def getfromtable(table, i, j) do
-      val = -1
-      IO.puts "get from table: "
-      IO.inspect(table)
-      if table == nil do
-        IO.puts "Table is nil"
-      else
-        val = Enum.at(Enum.at(table, i), j)
-      end
-      IO.puts "Val ------------------------------------------ " <> "#{val}"
+      val = Enum.at(Enum.at(table, i), j)
       val
     end
 
