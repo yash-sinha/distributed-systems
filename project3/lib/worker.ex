@@ -74,7 +74,7 @@ defmodule WORKER do
 
               (msg == "route") ->
                     if(id == toid) do
-                      :global.whereis_name(:server) |> send({String.to_atom("routefinish"), [fromid, toid, hops + 1]})
+                      :global.whereis_name(:server) |> send({:routefinish, [fromid, toid, hops + 1]})
                     else
                       samePre = sameprefix(toBase4String(id, log4), toBase4String(toid, log4))
 
@@ -150,13 +150,16 @@ defmodule WORKER do
             end
 
           {:beginroute} ->
+            IO.puts "Worker's begin route"
             ilist = Enum.to_list(1..numrequests)
             Enum.each ilist, fn(i) ->
                self() |> send({:clocktick})
             end
 
           {:clocktick} ->
-            self() |> send({:route, [id, :random.uniform(idspace), -1]})
+            # IO.puts "Clocktick"
+            IO.puts "ID: " <> "#{id}"
+            self() |> send({:route, ["route", id, :random.uniform(idspace), -1]})
             :timer.sleep(1000)
             self() |> send({:clocktick})
             #TODO where does this stop?
@@ -231,8 +234,8 @@ defmodule WORKER do
        #  IO.puts "alive1"
        IO.puts "id: " <> "#{id}" <>" log4: " <> "#{log4}" <> " tobase: " <> toBase4String(id, log4) <>" samepre: " <> "#{samePre}" <> " tobase id log4: " <> toBase4String(id, log4) <> " tobase s log 4: " <> toBase4String(s, log4)
        IO.puts " String at: " <> String.at(toBase4String(id, log4), samePre)
-       # IO.inspect table
-        if(getfromtable(table, samePre, String.to_integer(String.at(toBase4String(id, log4), samePre))) != -1) do
+       IO.inspect table
+        if(getfromtable(table, samePre, String.to_integer(String.at(toBase4String(id, log4), samePre))) == -1) do
          #  IO.puts "alive 1"
           table = updatetable(table, samePre, String.to_integer(String.at(toBase4String(id, log4), samePre)), s)
         end
@@ -274,9 +277,8 @@ defmodule WORKER do
 
     def toBase4String(raw, len) do
       str = Integer.to_string(raw,4)
-      # IO.puts "str raw: " <> str
       diff = len - String.length(str)
-      # IO.puts "diff: " <> "#{diff}"
+      IO.puts "raw: " <> "#{raw}" <> " str raw: " <> str <> " diff: " <> "#{diff}" <> " len: " <> "#{len}"
       if diff > 0 do
         str = createstr(str, 0, diff)
       end
@@ -294,7 +296,7 @@ defmodule WORKER do
     end
 
     def sameprefix(str1, str2) do
-      j = getjsameprefix(str1, str2, -1)
+      j = getjsameprefix(str1, str2, 0)
       j
     end
 
@@ -343,7 +345,15 @@ defmodule WORKER do
     end
 
     def getfromtable(table, i, j) do
-      val = Enum.at(Enum.at(table, i), j)
+      val = -1
+      IO.puts "get from table: "
+      IO.inspect(table)
+      if table == nil do
+        IO.puts "Table is nil"
+      else
+        val = Enum.at(Enum.at(table, i), j)
+      end
+      IO.puts "Val ------------------------------------------ " <> "#{val}"
       val
     end
 
@@ -361,7 +371,7 @@ defmodule WORKER do
         table
       else
         jidx = String.to_integer(String.at(toBase4String(id, log4), s))
-        IO.puts "jidx: " <> "#{jidx}"
+        # IO.puts "jidx: " <> "#{jidx}"
         table = updatetable(table, s, jidx, id)
         firstjointable(table, id, log4, s-1)
       end

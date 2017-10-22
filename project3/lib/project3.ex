@@ -1,21 +1,21 @@
 defmodule Project3 do
 
   def main(args) do
-
+    processpid = self()
     if length(args) != 2 do
-      pastry(1000, 10)
+      pastry(1000, 10, processpid)
     else
       {_,input,_}  = OptionParser.parse(args)
       numnodes = Enum.at(input,0)
       {numnodes, _} = :string.to_integer(numnodes)
       numrequests = Enum.at(input,1)
       {numrequests, _} = :string.to_integer(numrequests)
-      pastry(numnodes, numrequests)
+      pastry(numnodes, numrequests, processpid)
     end
     Process.sleep(:infinity)
   end
 
-  def pastry(numnodes, numrequests) do
+  def pastry(numnodes, numrequests, processpid) do
     log4 = round(Float.ceil(:math.log(numnodes) / :math.log(4)))
 
     nodeidspace = round(:math.pow(4, log4))
@@ -31,7 +31,7 @@ defmodule Project3 do
     IO.puts "Node ID space: 0 - " <> "#{nodeidspace - 1}"
     IO.puts "Number Of Request Per Node: " <> "#{numrequests}"
     IO.puts "log4: " <> "#{log4}"
-    ranlist = populaterandomlist(nodeidspace, ranlist)
+    ranlist = populaterandomlist(nodeidspace - 1, ranlist)
 
     ranlist = Enum.shuffle ranlist
     # ranlist = Enum.reverse ranlist
@@ -41,12 +41,12 @@ defmodule Project3 do
     firstgroup = Enum.reverse firstgroup
 
     IO.inspect(firstgroup)
-    spawnserver(ranlist, numfirstgroup, firstgroup, numnodes, numrequests)
+    spawnserver(ranlist, numfirstgroup, firstgroup, numnodes, numrequests, processpid)
     create_workers(numnodes, numrequests, ranlist, numnodes-1, log4)
     :global.whereis_name(:server) |> send({:go})
   end
 
-  def populaterandomlist(nodeidspace, randomlist) when nodeidspace < 1 do
+  def populaterandomlist(nodeidspace, randomlist) when nodeidspace < 0 do
      randomlist
   end
 
@@ -64,7 +64,7 @@ defmodule Project3 do
     populatefirstgroup(numFirstGroup - 1, randomlist, firstgroup)
   end
 
-  def serve(ranlist, numfirstgroup, firstgroup, numjoined, numnodes, numnotinboth, numrouted, numhops, numrequests, numroutenotinboth) do
+  def serve(ranlist, numfirstgroup, firstgroup, numjoined, numnodes, numnotinboth, numrouted, numhops, numrequests, numroutenotinboth, processpid) do
     receive do
         {:go} ->
           IO.puts "Join starts..."
@@ -146,7 +146,9 @@ defmodule Project3 do
             IO.puts "Number of total routes: " <> "#{numrouted}"
             IO.puts "Number of total hops: " <> "#{numhops}"
             IO.puts "Average hops per route: " <> "#{numhops / numrouted}"
-            Process.exit(self, :kill)
+            # :global.whereis_name(:server) |> Process.exit(:kill)
+            # Process.exit(self(), :kill)
+            Process.exit(processpid, :kill)
           end
         #
         # case RouteFinish(fromID, toID, hops) =>
@@ -170,7 +172,7 @@ defmodule Project3 do
       #     numRouteNotInBoth += 1
       # }
     end
-    serve(ranlist, numfirstgroup, firstgroup, numjoined, numnodes, numnotinboth, numrouted, numhops, numrequests, numroutenotinboth)
+    serve(ranlist, numfirstgroup, firstgroup, numjoined, numnodes, numnotinboth, numrouted, numhops, numrequests, numroutenotinboth, processpid)
   end
 
   def create_workers(numnodes, numrequests, ranlist, id, log4) when id < 0 do
@@ -233,13 +235,13 @@ defmodule Project3 do
     messageallworkers(func, ranlist, numnodes - 1, args)
   end
 
-  def spawnserver(ranlist, numfirstgroup, firstgroup, numnodes, numrequests) do
+  def spawnserver(ranlist, numfirstgroup, firstgroup, numnodes, numrequests, processpid) do
     numjoined = 0
     numnotinboth = 0
     numrouted = 0
     numhops = 0
     numroutenotinboth = 0
-    pid = spawn(Project3, :serve, [ranlist, numfirstgroup, firstgroup, numjoined, numnodes, numnotinboth, numrouted, numhops, numrequests, numroutenotinboth])
+    pid = spawn(Project3, :serve, [ranlist, numfirstgroup, firstgroup, numjoined, numnodes, numnotinboth, numrouted, numhops, numrequests, numroutenotinboth, processpid])
     :global.register_name(:server, pid)
     pid
   end
