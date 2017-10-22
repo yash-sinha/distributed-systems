@@ -1,7 +1,8 @@
 defmodule Project3 do
 
   def main(args) do
-    if length args != 2 do
+
+    if length(args) != 2 do
       pastry(1000, 10)
     else
       {_,input,_}  = OptionParser.parse(args)
@@ -15,8 +16,9 @@ defmodule Project3 do
   end
 
   def pastry(numnodes, numrequests) do
-    log4 = Float.ceil(:math.log(numnodes) / :math.log(4))
-    nodeIDSpace = round(:math.pow(4, log4))
+    log4 = round(Float.ceil(:math.log(numnodes) / :math.log(4)))
+
+    nodeidspace = round(:math.pow(4, log4))
     ranlist = []
     firstgroup = []
 
@@ -25,11 +27,11 @@ defmodule Project3 do
     else
       1024
     end
-    IO.puts "Number of nodes" <> "#{numnodes}"
-    IO.puts "Node ID space: 0 - " <> "#{nodeIDSpace - 1}"
+    IO.puts "Number of nodes: " <> "#{numnodes}"
+    IO.puts "Node ID space: 0 - " <> "#{nodeidspace - 1}"
     IO.puts "Number Of Request Per Node: " <> "#{numrequests}"
-
-    ranlist = populaterandomlist(numnodes, ranlist)
+    IO.puts "log4: " <> "#{log4}"
+    ranlist = populaterandomlist(nodeidspace, ranlist)
 
     ranlist = Enum.shuffle ranlist
     # ranlist = Enum.reverse ranlist
@@ -39,8 +41,8 @@ defmodule Project3 do
     firstgroup = Enum.reverse firstgroup
 
     IO.inspect(firstgroup)
-    create_workers(numnodes, numrequests, ranlist, numnodes-1, log4)
     spawnserver(ranlist, numfirstgroup, firstgroup, numnodes, numrequests)
+    create_workers(numnodes, numrequests, ranlist, numnodes-1, log4)
     :global.whereis_name(:server) |> send({:go})
   end
 
@@ -66,7 +68,7 @@ defmodule Project3 do
     receive do
         {:go} ->
           IO.puts "Join starts..."
-          messageallworkers("firstjoin", ranlist, numfirstgroup - 1, [firstgroup])
+          messageallworkers("firstjoin", ranlist, numfirstgroup - 1, [firstgroup, "server"])
         # case Go =>
         #   println("Join Begins...")
         #   for (i <- 0 until numFirstGroup)
@@ -194,7 +196,9 @@ defmodule Project3 do
     idspace = round(:math.pow(4, log4))
     table = []
     sublist = [-1, -1, -1, -1]
-    for i <- 0..log4, do: table = table ++ sublist
+    table = for i <- 0..(log4 - 1), do: table = table ++ sublist
+    # IO.puts "table"
+    # IO.inspect table
     pid = spawn(WORKER, :listen, [numnodes, numrequests, Enum.at(ranlist, id), log4, table, numofback, lessleaf, largerleaf, idspace])
     name = "act" <> "#{Enum.at(ranlist, id)}"
     worker = String.to_atom(name)
@@ -209,12 +213,23 @@ defmodule Project3 do
     :global.whereis_name(worker) |> send({funcatom, args})
   end
 
+  def messageworkernoargs(id, func) do
+    name = "act" <> "#{id}"
+    worker = String.to_atom(name)
+    funcatom = String.to_atom(func)
+    :global.whereis_name(worker) |> send({funcatom})
+  end
+
   def messageallworkers(func, ranlist, numnodes, args) when numnodes < 0 do
     IO.puts "Message sent to all workers"
   end
 
   def messageallworkers(func, ranlist, numnodes, args) do
-    messageworker(Enum.at(ranlist, numnodes), func, args)
+    if length(args) == 0 do
+      messageworkernoargs(Enum.at(ranlist, numnodes), func)
+    else
+      messageworker(Enum.at(ranlist, numnodes), func, args)
+    end
     messageallworkers(func, ranlist, numnodes - 1, args)
   end
 
@@ -224,7 +239,7 @@ defmodule Project3 do
     numrouted = 0
     numhops = 0
     numroutenotinboth = 0
-    pid = spawn(Proect3, :serve, [ranlist, numfirstgroup, firstgroup, numjoined, numnodes, numnotinboth, numrouted, numhops, numrequests, numroutenotinboth])
+    pid = spawn(Project3, :serve, [ranlist, numfirstgroup, firstgroup, numjoined, numnodes, numnotinboth, numrouted, numhops, numrequests, numroutenotinboth])
     :global.register_name(:server, pid)
     pid
   end
