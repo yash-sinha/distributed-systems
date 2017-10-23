@@ -21,12 +21,12 @@ defmodule Project3 do
     nodeidspace = round(:math.pow(4, log4))
     ranlist = []
     firstgroup = []
-
-    numfirstgroup =  if numnodes <= 1024 do
-      numnodes
-    else
-      1024
-    end
+    numfirstgroup = numnodes
+    # numfirstgroup =  if numnodes <= 1024 do
+    #   numnodes
+    # else
+    #   1024
+    # end
     IO.puts "Number of nodes: " <> "#{numnodes}"
     IO.puts "Node ID space: 0 - " <> "#{nodeidspace - 1}"
     IO.puts "Number Of Request Per Node: " <> "#{numrequests}"
@@ -122,7 +122,7 @@ defmodule Project3 do
 
         {:secondjoin} ->
           startid = :rand.uniform(numjoined)
-          messageworker(startid, "route", ["join", startid, Enum.at(ranlist, numjoined), -1])
+          messageworker(startid, "route", ["join", startid, Enum.at(ranlist, numjoined), -1, -1])
 
         # case SecondJoin =>
         #   val startID = ranlist(Random.nextInt(numJoined))
