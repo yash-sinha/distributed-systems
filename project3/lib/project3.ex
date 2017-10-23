@@ -93,6 +93,10 @@ defmodule Project3 do
               :global.whereis_name(:server) |> send({:secondjoin})
             end
           end
+
+
+
+
         #
         # case JoinFinish =>
         #   numJoined += 1
@@ -142,7 +146,8 @@ defmodule Project3 do
         {:routefinish, [fromid, toid, hops]} ->
           numrouted = numrouted + 1
           numhops = numhops + hops
-          if numrouted >= numnodes * numrequests do
+          IO.puts "Finished ---- " <> "#{numrouted}"
+          if numrouted == numnodes * numrequests do
             IO.puts "Number of total routes: " <> "#{numrouted}"
             IO.puts "Number of total hops: " <> "#{numhops}"
             IO.puts "Average hops per route: " <> "#{numhops / numrouted}"
@@ -195,7 +200,9 @@ defmodule Project3 do
     lessleaf = []
     largerleaf = []
     numofback = 0
-    idspace = round(:math.pow(4, log4))
+    total = round(:math.pow(4, log4))
+    idspace = Enum.to_list(0..(total - 1))#round(:math.pow(4, log4))
+    idspace = idspace -- [Enum.at(ranlist, id)]
     table = []
     sublist = [-1, -1, -1, -1]
     table = for i <- 0..(log4 - 1), do: table = table ++ sublist
