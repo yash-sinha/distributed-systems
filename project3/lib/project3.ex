@@ -38,9 +38,11 @@ defmodule Project3 do
     IO.inspect(ranlist)
 
     firstgroup = populatefirstgroup(numfirstgroup - 1, ranlist, firstgroup)
+
     firstgroup = Enum.reverse firstgroup
 
     IO.inspect(firstgroup)
+    # firstgroup = Enum.sort(firstgroup)
     spawnserver(ranlist, numfirstgroup, firstgroup, numnodes, numrequests, processpid)
     create_workers(numnodes, numrequests, ranlist, numnodes-1, log4)
     :global.whereis_name(:server) |> send({:go})

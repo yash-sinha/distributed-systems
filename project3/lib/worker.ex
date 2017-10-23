@@ -97,17 +97,19 @@ defmodule WORKER do
                       :global.whereis_name(:server) |> send({:routefinish, [fromid, toid, hops]})
                     else
                       samePre = sameprefix(toBase4String(id, log4), toBase4String(toid, log4))
-                      flag = false
-                      if samePre == 0 do
-                        firstchartoid = String.at(toBase4String(toid, log4), 0)
-                        val = getfromtable(table, 0, String.to_integer(String.at(toBase4String(id, log4), 0)))
-                        firstcharrouteval = String.at(toBase4String(val, log4), 0)
-                        if firstchartoid == firstcharrouteval do
-                          flag = true
-                        end
-                      else
-                        flag = true
-                      end
+                      # flag = false
+                      IO.puts "samepre :" <> "#{samePre}" <> " tobaseid: " <> "#{toBase4String(id, log4)}" <> " tobasetoid: " <>  "#{toBase4String(toid, log4)}"
+                      # if samePre == 0 do
+                        # firstchartoid = String.at(toBase4String(toid, log4), samePre)
+                        # val = getfromtable(table, samePre, String.to_integer(String.at(toBase4String(toid, log4), samePre)))
+                        #
+                        # firstcharrouteval = String.at(toBase4String(val, log4), samePre)
+                        # if firstchartoid == firstcharrouteval do
+                        #   flag = true
+                        # end
+                      # else
+                      #   flag = false
+                      # end
                       if length(largerleaf) > 0 do
                         ##IO.puts("route:: hops: #{hops} id #{id} from: #{fromid} toid: #{toid} Enum.maxlargerleaf: #{Enum.max(largerleaf)} lenlargerleaf: #{length(largerleaf)} i: #{samePre} j: #{String.to_integer(String.at(toBase4String(id, log4), samePre))} lessleaf:  #{inspect(lessleaf)} : largerleaf: #{inspect(largerleaf)} : table is: #{inspect(table)} ")
                       else
@@ -143,12 +145,12 @@ defmodule WORKER do
                               :global.whereis_name(:server) |> send({String.to_atom("routefinish"), [fromid, toid, hops]})
                             end
 
-                            getfromtable(table, samePre, String.to_integer(String.at(toBase4String(id, log4), samePre))) != -1 && flag == true->
+                            getfromtable(table, samePre, String.to_integer(String.at(toBase4String(toid, log4), samePre))) != -1 ->
                               ####IO.puts "cond5"
                               ####IO.inspect(table)
                               ##IO.puts("cond5:: id #{id} from: #{fromid} toid: #{toid} i: #{samePre} j: #{String.to_integer(String.at(toBase4String(id, log4), samePre))} lessleaf:  #{inspect(lessleaf)} : largerleaf: #{inspect(largerleaf)} : table is: #{inspect(table)} ")
                               IO.puts("cond12:: hops: #{hops} id #{id} from: #{fromid} toid: #{toid} lessleaf:  #{inspect(lessleaf)} : largerleaf: #{inspect(largerleaf)} : table is: #{inspect(table)} ")
-                               messageworker(getfromtable(table, samePre, String.to_integer(String.at(toBase4String(id, log4), samePre))), "route", [msg, fromid, toid, hops + 1, id])
+                               messageworker(getfromtable(table, samePre, String.to_integer(String.at(toBase4String(toid, log4), samePre))), "route", [msg, fromid, toid, hops + 1, id])
 
 
                           (length(lessleaf) <= 4 && length(lessleaf) > 0 && toid < Enum.min(lessleaf)) ->
@@ -316,10 +318,10 @@ defmodule WORKER do
        ####IO.puts "id: " <> "#{id}" <>" log4: " <> "#{log4}" <> " tobase: " <> toBase4String(id, log4) <>" samepre: " <> "#{samePre}" <> " tobase id log4: " <> toBase4String(id, log4) <> " tobase s log 4: " <> toBase4String(s, log4)
        ####IO.puts " String at: " <> String.at(toBase4String(id, log4), samePre)
        ####IO.inspect table
-        if(getfromtable(table, samePre, String.to_integer(String.at(toBase4String(id, log4), samePre))) == -1) do
+        if(getfromtable(table, samePre, String.to_integer(String.at(toBase4String(s, log4), samePre))) == -1) do
          #  ####IO.puts "alive 1"
           tabletemp = table
-          table = updatetable(table, samePre, String.to_integer(String.at(toBase4String(id, log4), samePre)), s)
+          table = updatetable(table, samePre, String.to_integer(String.at(toBase4String(s, log4), samePre)), s)
           # ##IO.puts("update id #{id} sampePre: #{samePre} j: #{String.to_integer(String.at(toBase4String(id, log4), samePre))} s: #{s} lessleaf:  #{inspect(lessleaf)} : largerleaf: #{inspect(largerleaf)} :before table is: #{inspect(tabletemp)} :after table is: #{inspect(table)}")
 
         end
@@ -354,8 +356,8 @@ defmodule WORKER do
      #check routing table
      samePre = sameprefix(toBase4String(id, log4), toBase4String(one, log4))
 
-     if(getfromtable(table, samePre, String.to_integer(String.at(toBase4String(id, log4), samePre))) == -1) do
-       table = updatetable(table, samePre, String.to_integer(String.at(toBase4String(id, log4), samePre)), one)
+     if(getfromtable(table, samePre, String.to_integer(String.at(toBase4String(one, log4), samePre))) == -1) do
+       table = updatetable(table, samePre, String.to_integer(String.at(toBase4String(one, log4), samePre)), one)
      end
      reslist = [table, lessleaf, largerleaf]
      reslist
