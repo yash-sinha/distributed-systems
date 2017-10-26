@@ -17,7 +17,6 @@ defmodule Project3 do
 
   def pastry(numnodes, numrequests, processpid) do
     log4 = round(Float.ceil(:math.log(numnodes) / :math.log(4)))
-
     nodeidspace = round(:math.pow(4, log4))
     ranlist = []
     firstgroup = []
@@ -32,17 +31,13 @@ defmodule Project3 do
     IO.puts "Number Of Request Per Node: " <> "#{numrequests}"
     IO.puts "log4: " <> "#{log4}"
     ranlist = populaterandomlist(nodeidspace - 1, ranlist)
-
     ranlist = Enum.shuffle ranlist
-    # ranlist = Enum.reverse ranlist
     IO.inspect(ranlist)
 
     firstgroup = populatefirstgroup(numfirstgroup - 1, ranlist, firstgroup)
-
     firstgroup = Enum.reverse firstgroup
 
     IO.inspect(firstgroup)
-    # firstgroup = Enum.sort(firstgroup)
     spawnserver(ranlist, numfirstgroup, firstgroup, numnodes, numrequests, processpid)
     create_workers(numnodes, numrequests, ranlist, numnodes-1, log4)
     :global.whereis_name(:server) |> send({:go})
@@ -71,15 +66,11 @@ defmodule Project3 do
         {:go} ->
           IO.puts "Join starts..."
           messageallworkers("firstjoin", ranlist, numfirstgroup - 1, [firstgroup, "server"])
-        # case Go =>
-        #   println("Join Begins...")
-        #   for (i <- 0 until numFirstGroup)
-        #     context.system.actorSelection("/user/master/" + ranlist(i)) ! FirstJoin(firstGroup.clone)
 
         {:joinfinish} ->
-          IO.puts "First group join finished"
           numjoined = numjoined + 1
           if numjoined == numfirstgroup do
+            IO.puts "First group join finished for -- " <> "#{numjoined}" <> " nodes."
             if numjoined >= numnodes do
               :global.whereis_name(:server) |> send({:beginroute})
             else
@@ -96,88 +87,30 @@ defmodule Project3 do
             end
           end
 
-
-
-
-        #
-        # case JoinFinish =>
-        #   numJoined += 1
-        #   if (numJoined == numFirstGroup) {
-        #     //println("First Group Join Finished!")
-        #     if (numJoined >= numNodes) {
-        #       self ! BeginRoute
-        #     } else {
-        #       self ! SecondJoin
-        #     }
-        #   }
-
-          # if (numJoined > numFirstGroup) {
-          #   if (numJoined == numNodes) {
-          #     //println("Routing Not In Both Count: " + numNotInBoth)
-          #     //println("Ratio: " + (100 * numNotInBoth.toDouble / numNodes.toDouble) + "%")
-          #     self ! BeginRoute
-          #   } else {
-          #     self ! SecondJoin
-          #   }
-          #
-          # }
-
         {:secondjoin} ->
           startid = :rand.uniform(numjoined)
           messageworker(startid, "route", ["join", startid, Enum.at(ranlist, numjoined), -1, -1])
-
-        # case SecondJoin =>
-        #   val startID = ranlist(Random.nextInt(numJoined))
-        #   context.system.actorSelection("/user/master/" + startID) ! Route("Join", startID, ranlist(numJoined), -1)
 
         {:beginroute} ->
           IO.puts "Join finished"
           IO.puts "Routing begins"
           messageallworkers("beginroute", ranlist, numnodes - 1, [])
 
-        # case BeginRoute =>
-    	  # println("Join Finished!")
-        #   println("Routing Begins...")
-        #   context.system.actorSelection("/user/master/*") ! BeginRoute
         {:notinboth} ->
           numnotinboth = numnotinboth + 1
-
-        # case NotInBoth =>
-        #   numNotInBoth += 1
 
         {:routefinish, [fromid, toid, hops]} ->
           numrouted = numrouted + 1
           numhops = numhops + hops
-          IO.puts "Finished ---- " <> "#{numrouted}"
           if numrouted == numnodes * numrequests do
             IO.puts "Number of total routes: " <> "#{numrouted}"
             IO.puts "Number of total hops: " <> "#{numhops}"
             IO.puts "Average hops per route: " <> "#{numhops / numrouted}"
-            # :global.whereis_name(:server) |> Process.exit(:kill)
-            # Process.exit(self(), :kill)
             Process.exit(processpid, :kill)
           end
-        #
-        # case RouteFinish(fromID, toID, hops) =>
-        #   numRouted += 1
-        #   numHops += hops
-        #   for (i <- 1 to 10)
-        #     if (numRouted == numNodes * numRequests * i / 10)
-        #       println(i + "0% Routing Finished...")
-        #
-        #   if (numRouted >= numNodes * numRequests) {
-        #     println("Number of Total Routes: " + numRouted)
-        #     println("Number of Total Hops: " + numHops)
-        #     println("Average Hops Per Route: " + numHops.toDouble / numRouted.toDouble)
-        #     //println("Route Not In Both Count: " + numRouteNotInBoth)
-        #     context.system.shutdown()
-        #   }
 
         {:routenotinboth} ->
           numroutenotinboth = numroutenotinboth + 1
-      #   case RouteNotInBoth =>
-      #     numRouteNotInBoth += 1
-      # }
     end
     serve(ranlist, numfirstgroup, firstgroup, numjoined, numnodes, numnotinboth, numrouted, numhops, numrequests, numroutenotinboth, processpid)
   end
@@ -187,18 +120,6 @@ defmodule Project3 do
   end
 
   def create_workers(numnodes, numrequests, ranlist, id, log4) do
-    #     val myID = id;
-    # var lessLeaf = new ArrayBuffer[Int]()
-    # var largerLeaf = new ArrayBuffer[Int]()
-    # var table = new Array[Array[Int]](log4)
-    # var numOfBack: Int = 0
-    # val IDSpace: Int = pow(4, log4).toInt
-
-    # var i = 0
-    # for (i <- 0 until log4)
-    #   table(i) = Array(-1, -1, -1, -1)
-
-    # numNodes, numRequests, id, log4, table, numofback, lessleaf, largerleaf, idspace
     lessleaf = []
     largerleaf = []
     numofback = 0
@@ -208,8 +129,6 @@ defmodule Project3 do
     table = []
     sublist = [-1, -1, -1, -1]
     table = for i <- 0..(log4 - 1), do: table = table ++ sublist
-    # IO.puts "table"
-    # IO.inspect table
     pid = spawn(WORKER, :listen, [numnodes, numrequests, Enum.at(ranlist, id), log4, table, numofback, lessleaf, largerleaf, idspace])
     name = "act" <> "#{Enum.at(ranlist, id)}"
     worker = String.to_atom(name)
