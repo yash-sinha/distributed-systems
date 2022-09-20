@@ -13,7 +13,7 @@
     "babel-brunch": "~6.0.0",
     "brunch": "~2.6.5",
     "documentation": "^4.0.0-rc.1",
-    "jsdom": "9.8.3",
+    "jsdom": "16.5.0",
     "jsdom-global": "2.1.0",
     "mocha": "~2.4.4",
     "mock-socket": "^6.0.1",
